@@ -25,13 +25,21 @@ final class ContentViewModel: ObservableObject {
 
     @Published var cityText = "" {
         didSet {
-            searchForCity(text: cityText)
+            if cityText.isEmpty {
+                viewData = []
+            } else {
+                searchForCity(text: cityText)
+            }
         }
     }
     
     @Published var poiText = "" {
         didSet {
-            searchForPOI(text: poiText)
+            if poiText.isEmpty {
+                viewData = []
+            } else {
+                searchForPOI(text: poiText)
+            }
         }
     }
     

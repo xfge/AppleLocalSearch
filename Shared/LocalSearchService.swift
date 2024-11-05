@@ -6,8 +6,8 @@
 //  Copyright © 2020 Robin Kment. All rights reserved.
 //
 
-import Foundation
 import Combine
+import Foundation
 import MapKit
 
 final class LocalSearchService {
@@ -15,20 +15,33 @@ final class LocalSearchService {
     private let center: CLLocationCoordinate2D
     private let radius: CLLocationDistance
 
+    private var timer: Timer?
+    private var search: MKLocalSearch?
+
     init(in center: CLLocationCoordinate2D,
-         radius: CLLocationDistance = 350_000) {
+         radius: CLLocationDistance = 350000) {
         self.center = center
-        self.radius = radius      
+        self.radius = radius
     }
-    
+
     public func searchCities(searchText: String) {
-        request(resultType: .address, searchText: searchText)
+        timer?.invalidate()
+        search?.cancel()
+
+        timer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { [weak self] _ in
+            self?.request(resultType: .address, searchText: searchText)
+        }
     }
-    
+
     public func searchPointOfInterests(searchText: String) {
-        request(searchText: searchText)
+        timer?.invalidate()
+        search?.cancel()
+
+        timer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { [weak self] _ in
+            self?.request(searchText: searchText)
+        }
     }
-    
+
     private func request(resultType: MKLocalSearch.ResultType = .pointOfInterest,
                          searchText: String) {
         let request = MKLocalSearch.Request()
@@ -40,7 +53,11 @@ final class LocalSearchService {
                                             longitudinalMeters: radius)
         let search = MKLocalSearch(request: request)
 
-        search.start { [weak self](response, _) in
+        search.start { [weak self] response, error in
+            if let error {
+                print("Error: \(error.localizedDescription)")
+            }
+
             guard let response = response else {
                 return
             }
